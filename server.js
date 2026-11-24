@@ -61,7 +61,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (req.method === 'GET' && req.url === '/health') {
-    sendJson(res, 200, { ok: true, model: MODEL, keyConfigured: Boolean(API_KEY), ttsConfigured: Boolean(FPT_API_KEY) });
+    sendJson(res, 200, { ok: true, model: MODEL, keyConfigured: Boolean(API_KEY), ttsConfigured: Boolean(FPT_API_KEY), chatMode: API_KEY ? 'meta' : 'free' });
     return;
   }
   if (req.method === 'POST' && req.url === '/api/speak') {
@@ -135,10 +135,6 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 429, { error: 'Bạn nhắn nhanh quá, chờ một chút rồi nhắn lại nhé.' });
     return;
   }
-  if (!API_KEY) {
-    sendJson(res, 500, { error: 'Server chưa cấu hình MODEL_API_KEY.' });
-    return;
-  }
 
   let body;
   try {
@@ -155,6 +151,23 @@ const server = http.createServer(async (req, res) => {
     .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
   if (!messages.length || messages[messages.length - 1].role !== 'user') {
     sendJson(res, 400, { error: 'Cần có ít nhất một tin nhắn của người dùng.' });
+    return;
+  }
+
+  if (!API_KEY) {
+    // Chế độ không cần key: dùng Pollinations (AI miễn phí, không cần API key).
+    try {
+      const prompt = [PERSONA, ...messages.map((m) => `${m.role === 'user' ? 'Bạn' : 'Mai Anh'}: ${m.content}`), 'Mai Anh:'].join('\n');
+      const r = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt), { signal: AbortSignal.timeout(60000) });
+      const text = (await r.text()).trim();
+      if (!r.ok || !text) {
+        sendJson(res, 502, { error: 'AI miễn phí chưa trả lời được, bạn thử lại nhé.' });
+        return;
+      }
+      sendJson(res, 200, { reply: text, mode: 'free' });
+    } catch {
+      sendJson(res, 502, { error: 'Không kết nối được tới AI miễn phí, bạn thử lại sau nhé.' });
+    }
     return;
   }
 

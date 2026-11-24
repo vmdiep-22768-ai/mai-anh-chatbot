@@ -67,6 +67,14 @@ tiên sau lúc ngủ có thể chờ khoảng 30–60 giây để server tỉnh 
 3. Trạng thái trên trang sẽ đổi từ "Chế độ demo" sang "AI thật" — từ lúc này
    mọi người chat trên trang đều được Mai Anh (AI thật) trả lời.
 
+## Chế độ không cần key (mới)
+
+Nếu chưa có key Meta, server vẫn chạy được: khi không có `MODEL_API_KEY`, câu
+trả lời sẽ dùng AI miễn phí Pollinations (không cần đăng ký, không cần key).
+Chất lượng trả lời có thể không ổn định bằng model Meta, nhưng đủ để trò
+chuyện. Giọng nữ vẫn dùng FPT.AI nếu đã cấu hình `FPT_API_KEY`, nếu không
+trang web sẽ dùng giọng nữ của trình duyệt.
+
 ## Chạy thử trên máy của bạn (không bắt buộc)
 
 ```bash
